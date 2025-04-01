@@ -70,9 +70,15 @@ public class JobLogReportHelper {
 
                             Map<String, Object> triggerCountMap = XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().findLogReport(todayFrom, todayTo);
                             if (triggerCountMap!=null && triggerCountMap.size()>0) {
-                                int triggerDayCount = triggerCountMap.containsKey("triggerDayCount")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCount"))):0;
-                                int triggerDayCountRunning = triggerCountMap.containsKey("triggerDayCountRunning")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCountRunning"))):0;
-                                int triggerDayCountSuc = triggerCountMap.containsKey("triggerDayCountSuc")?Integer.valueOf(String.valueOf(triggerCountMap.get("triggerDayCountSuc"))):0;
+                                Map<String, Object> useTriggerCountMap = new HashMap<>();
+                                for (String key : triggerCountMap.keySet()) {
+                                    Object value = triggerCountMap.get(key);
+                                    useTriggerCountMap.put(key.toUpperCase(), value);
+                                }
+
+                                int triggerDayCount = useTriggerCountMap.containsKey("TRIGGERDAYCOUNT")?Integer.valueOf(String.valueOf(useTriggerCountMap.get("TRIGGERDAYCOUNT"))):0;
+                                int triggerDayCountRunning = useTriggerCountMap.containsKey("TRIGGERDAYCOUNTRUNNING")?Integer.valueOf(String.valueOf(useTriggerCountMap.get("TRIGGERDAYCOUNTRUNNING"))):0;
+                                int triggerDayCountSuc = useTriggerCountMap.containsKey("TRIGGERDAYCOUNTSUC")?Integer.valueOf(String.valueOf(useTriggerCountMap.get("TRIGGERDAYCOUNTSUC"))):0;
                                 int triggerDayCountFail = triggerDayCount - triggerDayCountRunning - triggerDayCountSuc;
 
                                 xxlJobLogReport.setRunningCount(triggerDayCountRunning);
@@ -87,7 +93,7 @@ public class JobLogReportHelper {
                             }
                         }
 
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         if (!toStop) {
                             logger.error(">>>>>>>>>>> xxl-job, job log report thread error:{}", e);
                         }
@@ -121,7 +127,7 @@ public class JobLogReportHelper {
 
                     try {
                         TimeUnit.MINUTES.sleep(1);
-                    } catch (Throwable e) {
+                    } catch (Exception e) {
                         if (!toStop) {
                             logger.error(e.getMessage(), e);
                         }
@@ -144,7 +150,7 @@ public class JobLogReportHelper {
         logrThread.interrupt();
         try {
             logrThread.join();
-        } catch (Throwable e) {
+        } catch (InterruptedException e) {
             logger.error(e.getMessage(), e);
         }
     }
