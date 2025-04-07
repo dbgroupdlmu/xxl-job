@@ -107,14 +107,14 @@ public class JobRegistryHelper {
 								XxlJobAdminConfig.getAdminConfig().getXxlJobGroupDao().update(group);
 							}
 						}
-					} catch (Throwable e) {
+					} catch (Exception e) {
 						if (!toStop) {
 							logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e);
 						}
 					}
 					try {
 						TimeUnit.SECONDS.sleep(RegistryConfig.BEAT_TIMEOUT);
-					} catch (Throwable e) {
+					} catch (InterruptedException e) {
 						if (!toStop) {
 							logger.error(">>>>>>>>>>> xxl-job, job registry monitor thread error:{}", e);
 						}
@@ -138,7 +138,7 @@ public class JobRegistryHelper {
 		registryMonitorThread.interrupt();
 		try {
 			registryMonitorThread.join();
-		} catch (Throwable e) {
+		} catch (InterruptedException e) {
 			logger.error(e.getMessage(), e);
 		}
 	}
@@ -159,19 +159,13 @@ public class JobRegistryHelper {
 		registryOrRemoveThreadPool.execute(new Runnable() {
 			@Override
 			public void run() {
-				// 0-fail; 1-save suc; 2-update suc;
-				int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().registrySaveOrUpdate(registryParam.getRegistryGroup(), registryParam.getRegistryKey(), registryParam.getRegistryValue(), new Date());
-				if (ret == 1) {
-					// fresh (add)
-					freshGroupRegistryInfo(registryParam);
-				}
-				/*int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().registryUpdate(registryParam.getRegistryGroup(), registryParam.getRegistryKey(), registryParam.getRegistryValue(), new Date());
+				int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().registryUpdate(registryParam.getRegistryGroup(), registryParam.getRegistryKey(), registryParam.getRegistryValue(), new Date());
 				if (ret < 1) {
 					XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().registrySave(registryParam.getRegistryGroup(), registryParam.getRegistryKey(), registryParam.getRegistryValue(), new Date());
 
 					// fresh
 					freshGroupRegistryInfo(registryParam);
-				}*/
+				}
 			}
 		});
 
@@ -193,7 +187,7 @@ public class JobRegistryHelper {
 			public void run() {
 				int ret = XxlJobAdminConfig.getAdminConfig().getXxlJobRegistryDao().registryDelete(registryParam.getRegistryGroup(), registryParam.getRegistryKey(), registryParam.getRegistryValue());
 				if (ret > 0) {
-					// fresh (delete)
+					// fresh
 					freshGroupRegistryInfo(registryParam);
 				}
 			}

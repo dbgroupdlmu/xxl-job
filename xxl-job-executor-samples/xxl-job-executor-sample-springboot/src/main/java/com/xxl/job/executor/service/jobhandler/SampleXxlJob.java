@@ -2,7 +2,6 @@ package com.xxl.job.executor.service.jobhandler;
 
 import com.xxl.job.core.context.XxlJobHelper;
 import com.xxl.job.core.handler.annotation.XxlJob;
-import com.xxl.job.core.util.GsonTool;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -14,7 +13,6 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.util.Arrays;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -58,6 +56,9 @@ public class SampleXxlJob {
         int shardIndex = XxlJobHelper.getShardIndex();
         int shardTotal = XxlJobHelper.getShardTotal();
 
+        // 输出日志，检查参数获取情况
+        System.out.println("获取到的分片参数：当前分片序号 = " + shardIndex + ", 总分片数 = " + shardTotal);
+
         XxlJobHelper.log("分片参数：当前分片序号 = {}, 总分片数 = {}", shardIndex, shardTotal);
 
         // 业务逻辑
@@ -74,8 +75,6 @@ public class SampleXxlJob {
 
     /**
      * 3、命令行任务
-     *
-     *  参数示例："ls -a" 或者 "pwd"
      */
     @XxlJob("commandJobHandler")
     public void commandJobHandler() throws Exception {
@@ -84,18 +83,9 @@ public class SampleXxlJob {
 
         BufferedReader bufferedReader = null;
         try {
-            // valid
-            if (command==null || command.trim().length()==0) {
-                XxlJobHelper.handleFail("command empty.");
-                return;
-            }
-
-            // command split
-            String[] commandArray = command.split(" ");
-
             // command process
             ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command(commandArray);
+            processBuilder.command(command);
             processBuilder.redirectErrorStream(true);
 
             Process process = processBuilder.start();
@@ -132,20 +122,15 @@ public class SampleXxlJob {
 
     /**
      * 4、跨平台Http任务
-     *
      *  参数示例：
-     *  <pre>
-     *      {
-     *          "url": "http://www.baidu.com",
-     *          "method": "get",
-     *          "data": "hello world"
-     *      }
-     *  </pre>
+     *      "url: http://www.baidu.com\n" +
+     *      "method: get\n" +
+     *      "data: content\n";
      */
     @XxlJob("httpJobHandler")
     public void httpJobHandler() throws Exception {
 
-        // param
+        // param parse
         String param = XxlJobHelper.getJobParam();
         if (param==null || param.trim().length()==0) {
             XxlJobHelper.log("param["+ param +"] invalid.");
@@ -154,19 +139,20 @@ public class SampleXxlJob {
             return;
         }
 
-        // param parse
-        String url;
-        String method;
-        String data;
-        try {
-            Map<String, String> paramMap =GsonTool.fromJson(param, Map.class);
-            url = paramMap.get("url");
-            method = paramMap.get("method");
-            data = paramMap.get("data");
-        } catch (Exception e) {
-            XxlJobHelper.log(e);
-            XxlJobHelper.handleFail();
-            return;
+        String[] httpParams = param.split("\n");
+        String url = null;
+        String method = null;
+        String data = null;
+        for (String httpParam: httpParams) {
+            if (httpParam.startsWith("url:")) {
+                url = httpParam.substring(httpParam.indexOf("url:") + 4).trim();
+            }
+            if (httpParam.startsWith("method:")) {
+                method = httpParam.substring(httpParam.indexOf("method:") + 7).trim().toUpperCase();
+            }
+            if (httpParam.startsWith("data:")) {
+                data = httpParam.substring(httpParam.indexOf("data:") + 5).trim();
+            }
         }
 
         // param valid
@@ -176,13 +162,12 @@ public class SampleXxlJob {
             XxlJobHelper.handleFail();
             return;
         }
-        if (method==null || !Arrays.asList("GET", "POST").contains(method.toUpperCase())) {
+        if (method==null || !Arrays.asList("GET", "POST").contains(method)) {
             XxlJobHelper.log("method["+ method +"] invalid.");
 
             XxlJobHelper.handleFail();
             return;
         }
-        method = method.toUpperCase();
         boolean isPostMethod = method.equals("POST");
 
         // request

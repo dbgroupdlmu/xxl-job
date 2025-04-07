@@ -6,7 +6,7 @@
     <parent>
         <groupId>com.xuxueli</groupId>
         <artifactId>xxl-job-executor-samples</artifactId>
-        <version>3.0.1-SNAPSHOT</version>
+        <version>2.5.0</version>
     </parent>
     <artifactId>xxl-job-executor-sample-frameless</artifactId>
     <packaging>jar</packaging>
@@ -17,6 +17,7 @@
 
 
     <dependencies>
+
 
         <!-- slf4j -->
         <dependency>
@@ -41,5 +42,42 @@
 
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.3.0</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <!-- 填写正确的主类路径 -->
+                            <mainClass>com.xxl.job.executor.sample.frameless.FramelessApplication</mainClass>
+                        </manifest>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.4.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>com.xxl.job.executor.sample.frameless.FramelessApplication</mainClass>
+                                </transformer>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
