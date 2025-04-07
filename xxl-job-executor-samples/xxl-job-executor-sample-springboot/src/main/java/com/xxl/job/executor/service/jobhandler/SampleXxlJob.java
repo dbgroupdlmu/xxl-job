@@ -75,6 +75,8 @@ public class SampleXxlJob {
 
     /**
      * 3、命令行任务
+     *
+     *  参数示例："ls -a" 或者 "pwd"
      */
     @XxlJob("commandJobHandler")
     public void commandJobHandler() throws Exception {
@@ -83,9 +85,18 @@ public class SampleXxlJob {
 
         BufferedReader bufferedReader = null;
         try {
+            // valid
+            if (command==null || command.trim().length()==0) {
+                XxlJobHelper.handleFail("command empty.");
+                return;
+            }
+
+            // command split
+            String[] commandArray = command.split(" ");
+
             // command process
             ProcessBuilder processBuilder = new ProcessBuilder();
-            processBuilder.command(command);
+            processBuilder.command(commandArray);
             processBuilder.redirectErrorStream(true);
 
             Process process = processBuilder.start();
